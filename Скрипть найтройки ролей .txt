@@ -1,0 +1,107 @@
+Запуск сервера 
+PS C:\Users\sereg\OneDrive\Рабочий стол\simple-django-login-and-register> .\venv\Scripts\activate
+(venv) PS C:\Users\sereg\OneDrive\Рабочий стол\simple-django-login-and-register> python manage.py runserver
+C:\an\python.exe: can't open file 'C:\\Users\\sereg\\OneDrive\\Рабочий стол\\simple-django-login-and-register\\manage.py': [Errno 2] No such file or directory
+(venv) PS C:\Users\sereg\OneDrive\Рабочий стол\simple-django-login-and-register> python source/manage.py runserver                                        
+Watching for file changes with StatReloader
+Performing system checks...
+
+System check identified no issues (0 silenced).
+November 18, 2024 - 00:25:47
+Django version 5.1.2, using settings 'app.settings'
+Starting development server at http://127.0.0.1:8000/
+Quit the server with CTRL-BREAK.
+
+
+
+для работы с ролями User, Moderator, и Admin, а также для реализации управления контентом, создадим соответствующие записи для групп, разрешений и свяжем их с пользователями. Вот SQL-запросы:
+
+1. Создание групп
+sql
+Копировать код
+INSERT INTO auth_group (name) VALUES
+    ('User'),
+    ('Moderator'),
+    ('Admin');
+2. Добавление разрешений для работы с контентом
+Предположим, у нас есть таблица Article (управление статьями). Добавим разрешения для этой таблицы.
+
+Добавление записи в django_content_type для модели Article:
+sql
+Копировать код
+INSERT INTO django_content_type (app_label, model) VALUES
+    ('app_name', 'article');
+Получение content_type_id для модели Article:
+sql
+Копировать код
+SELECT id FROM django_content_type WHERE app_label = 'app_name' AND model = 'article';
+(Допустим, это id=9.)
+
+Вставка разрешений для модели Article:
+sql
+Копировать код
+INSERT INTO auth_permission (content_type_id, codename, name) VALUES
+    (9, 'add_article', 'Can add article'),
+    (9, 'change_article', 'Can change article'),
+    (9, 'delete_article', 'Can delete article'),
+    (9, 'view_article', 'Can view article');
+3. Назначение разрешений группам
+Получение ID групп:
+sql
+Копировать код
+SELECT id FROM auth_group WHERE name = 'User';
+SELECT id FROM auth_group WHERE name = 'Moderator';
+SELECT id FROM auth_group WHERE name = 'Admin';
+(Допустим, User=1, Moderator=2, Admin=3.)
+
+Получение ID разрешений для Article:
+sql
+Копировать код
+SELECT id FROM auth_permission WHERE content_type_id = 9;
+Назначение разрешений:
+User (может просматривать статьи):
+sql
+Копировать код
+INSERT INTO auth_group_permissions (group_id, permission_id) VALUES
+    (1, (SELECT id FROM auth_permission WHERE codename = 'view_article'));
+Moderator (просмотр, добавление и изменение статей):
+sql
+Копировать код
+INSERT INTO auth_group_permissions (group_id, permission_id) VALUES
+    (2, (SELECT id FROM auth_permission WHERE codename = 'view_article')),
+    (2, (SELECT id FROM auth_permission WHERE codename = 'add_article')),
+    (2, (SELECT id FROM auth_permission WHERE codename = 'change_article'));
+Admin (полный доступ):
+sql
+Копировать код
+INSERT INTO auth_group_permissions (group_id, permission_id) VALUES
+    (3, (SELECT id FROM auth_permission WHERE codename = 'view_article')),
+    (3, (SELECT id FROM auth_permission WHERE codename = 'add_article')),
+    (3, (SELECT id FROM auth_permission WHERE codename = 'change_article')),
+    (3, (SELECT id FROM auth_permission WHERE codename = 'delete_article'));
+4. Назначение групп пользователям
+Получение ID пользователей:
+sql
+Копировать код
+SELECT id FROM auth_user WHERE username = 'KocmocX';
+SELECT id FROM auth_user WHERE username = 'KocmocX1';
+(Допустим, id=1 и id=2.)
+
+Связывание пользователей с группами:
+Назначим KocmocX в группу Admin:
+sql
+Копировать код
+INSERT INTO auth_user_groups (user_id, group_id) VALUES (1, 3);
+Назначим KocmocX1 в группу User:
+sql
+Копировать код
+INSERT INTO auth_user_groups (user_id, group_id) VALUES (2, 1);
+5. Проверка результата
+Для проверки можно выполнить запросы:
+
+sql
+Копировать код
+SELECT * FROM auth_group;
+SELECT * FROM auth_permission;
+SELECT * FROM auth_user_groups;
+SELECT * FROM auth_group_permissions;
