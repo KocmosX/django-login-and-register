@@ -1,0 +1,53 @@
+{% extends 'layouts/default/page.html' %}
+
+{% load i18n %}
+
+{% block content %}
+
+    {% if request.user.is_authenticated %}
+
+        <h3>{% translate 'Your username is' %} <b>{{ request.user.username }}</b>.</h3>
+
+        <!-- Простая таблица -->
+        <h4>{% translate 'User Table' %}</h4>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>{% translate 'ID' %}</th>
+                    <th>{% translate 'Username' %}</th>
+                    <th>{% translate 'Email' %}</th>
+                    <th>{% translate 'Actions' %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td>user1</td>
+                    <td>user1@example.com</td>
+                    <td>
+                        <a href="{% url 'accounts:change_profile' %}" class="btn btn-primary btn-sm">{% translate 'Edit' %}</a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>user2</td>
+                    <td>user2@example.com</td>
+                    <td>
+                        <a href="{% url 'accounts:change_profile' %}" class="btn btn-primary btn-sm">{% translate 'Edit' %}</a>
+                    </td>
+                </tr>
+                <!-- Добавьте больше строк по необходимости -->
+            </tbody>
+        </table>
+
+        <!-- Можете добавить еще блоки для редактирования, если необходимо -->
+        <h5>{% translate 'Edit your profile' %}</h5>
+        <a href="{% url 'accounts:change_profile' %}" class="btn btn-warning">{% translate 'Edit Profile' %}</a>
+
+    {% else %}
+
+        <p>{% translate 'You are a guest.' %}</p>
+
+    {% endif %}
+
+{% endblock content %}
